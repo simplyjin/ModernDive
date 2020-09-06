@@ -1,0 +1,220 @@
+---
+title: "multiple regression"
+author: "Jin Chen"
+date: "9/6/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(skimr)
+library(ISLR)
+
+```
+
+# One numerical and one categorical
+
+```{r EDA}
+evals_ch6 <- evals %>%
+  select(ID, score, age, gender)
+
+
+#1 - Look at raw values
+glimpse(evals_ch6)
+
+evals_ch6 %>% sample_n(size = 5)
+
+#2 - Summary Stats
+evals_ch6 %>% 
+  select(score, age, gender) %>% 
+  skim()
+
+evals_ch6 %>% 
+  get_correlation(formula = score ~ age) #correlation coefficients only exist between numerical variables.
+
+#3 - Viz
+ggplot(evals_ch6, aes(x = age, y = score, color = gender)) +
+  geom_point() +
+  labs(x = "Age", y = "Teaching Score", color = "Gender") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r Interaction Model}
+# Fit regression model:
+score_model_interaction <- lm(score ~ age * gender, data = evals_ch6)
+
+# Get regression table:
+get_regression_table(score_model_interaction) #female instructors are the baseline for comparison, because alphabetically comes before male
+```
+To interpret this table, we must first understand that the basline comparison group are courses with female instructors. The intercept and age are the intercept and slope respectively for females. The gendermale is the intercept for males in relation to females, thus male intercept is 4.883 - 0.446. The slope is thus -0.018 + 0.014. 
+
+
+Parrallel slopes force all liens to have the same slopes, but can have different intercepts.
+```{r Parallel Slopes Model}
+ggplot(evals_ch6, aes(x = age, y = score, color = gender)) +
+  geom_point() +
+  labs(x = "Age", y = "Teaching Score", color = "Gender") +
+  geom_parallel_slopes(se = FALSE) #geom_parallel_slopes is part of the moderndive package
+
+
+# Fit regression model:
+score_model_parallel_slopes <- lm(score ~ age + gender, data = evals_ch6) #notice we now use age + gender, not age * gender
+# Get regression table:
+get_regression_table(score_model_parallel_slopes)
+
+```
+
+To interpret, the gendermale estimate is the intercept of male in relation to the intercept of female. Thus, the male intercept is 4.484 + 0.191.
+
+```{r Observed/fitted values and residuals}
+regression_points <- get_regression_points(score_model_interaction) #get_regression_points quickly calculates all residuals
+regression_points
+
+
+```
+
+```{r LC6.1}
+#calculate residuals for the parrallel scores model
+regression_points <- get_regression_points(score_model_parallel_slopes) #get_regression_points quickly calculates all residuals
+regression_points
+
+```
+# Two numerical explanatory variables
+
+```{r EDA}
+library(ISLR)
+credit_ch6 <- Credit %>% as_tibble() %>% 
+  select(ID, debt = Balance, credit_limit = Limit, 
+         income = Income, credit_rating = Rating, age = Age)
+
+#1
+glimpse(credit_ch6)
+credit_ch6 %>% sample_n(size = 5)
+
+
+#2
+credit_ch6 %>% 
+  select(debt, credit_limit, income) %>% 
+  skim()
+  
+
+credit_ch6 %>% get_correlation(debt ~ credit_limit)
+credit_ch6 %>% get_correlation(debt ~ income)
+
+credit_ch6 %>% 
+  select(debt, credit_limit, income) %>% 
+  cor()
+
+
+#3
+ggplot(credit_ch6, aes(x = credit_limit, y = debt)) +
+  geom_point() +
+  labs(x = "Credit limit (in $)", y = "Credit card debt (in $)", 
+       title = "Debt and credit limit") +
+  geom_smooth(method = "lm", se = FALSE)
+
+ggplot(credit_ch6, aes(x = income, y = debt)) +
+  geom_point() +
+  labs(x = "Income (in $1000)", y = "Credit card debt (in $)", 
+       title = "Debt and income") +
+  geom_smooth(method = "lm", se = FALSE)
+
+```
+
+```{r LC6.2}
+#EDA with y = debt, x1 and x1 as credit_rating and age. What can you say about the relationships?
+credit_ch6 %>% 
+  select(debt, credit_rating, age) %>% 
+  skim()
+
+credit_ch6 %>% get_correlation(debt ~ credit_rating)
+credit_ch6 %>% get_correlation(debt ~ age)
+
+credit_ch6 %>% 
+  select(debt, credit_rating, age) %>% 
+  cor()
+
+
+ggplot(credit_ch6, aes(x = credit_rating, y = debt)) +
+  geom_point() +
+  labs(x = "Credit Rating", y = "Credit card debt (in $)", 
+       title = "Debt and credit rating") +
+  geom_smooth(method = "lm", se = FALSE)
+
+ggplot(credit_ch6, aes(x = age, y = debt)) +
+  geom_point() +
+  labs(x = "Age", y = "Credit card debt (in $)", 
+       title = "Debt and age") +
+  geom_smooth(method = "lm", se = FALSE)
+
+```
+
+```{r Regression plane}
+# Fit regression model:
+debt_model <- lm(debt ~ credit_limit + income, data = credit_ch6)
+# Get regression table:
+get_regression_table(debt_model)
+
+
+```
+
+How do we interpret this chart? For a person with 0 credit_limit and 0 income, they have a debt of -385. Taking into account all other explanatory variables,  for every 1 increase in credit_limit, there is an associated 0.264 increase in debt. For every 1 increase in income, there is an associated -7.66 decrease in CC debt. 
+
+
+```{r LC6.3}
+debt_model2 <- lm(debt ~ credit_rating + age, data = credit_ch6)
+get_regression_table(debt_model2)
+
+
+```
+
+How do we interpret this chart? For a person with 0 credit_rating and 0 age, they have CC debt of $-269. (obviously this is not practical, but is useful in mathematical terms) For every 1 increase in credit_rating, there is an associated 2.593 increase in CC debt, taking into account all other explanatory variables (here we only have age). For every 1 increase in age, there is an associated -2.35 decrease in CC debt.
+
+So, higher credit rating is associated with higher CC debt and older age is associated with lower CC debt.
+
+```{r Observed/fitted values and residuals}
+get_regression_points(debt_model) #get all residuals
+
+
+
+```
+Comparing parallel slopes model with interaction model
+
+```{r Related topics comparing models}
+# Interaction model
+ggplot(MA_schools, 
+       aes(x = perc_disadvan, y = average_sat_math, color = size)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Percent economically disadvantaged", y = "Math SAT Score", 
+       color = "School size", title = "Interaction model")
+
+
+# Parallel slopes model
+ggplot(MA_schools, 
+       aes(x = perc_disadvan, y = average_sat_math, color = size)) +
+  geom_point(alpha = 0.25) +
+  geom_parallel_slopes(se = FALSE) +
+  labs(x = "Percent economically disadvantaged", y = "Math SAT Score", 
+       color = "School size", title = "Parallel slopes model")
+
+
+model_2_interaction <- lm(average_sat_math ~ perc_disadvan * size, 
+                          data = MA_schools)
+get_regression_table(model_2_interaction)
+
+model_2_parallel_slopes <- lm(average_sat_math ~ perc_disadvan + size, 
+                              data = MA_schools)
+get_regression_table(model_2_parallel_slopes)
+```
+
+```{r Related topics correlation coefficient}
+credit_ch6 %>% select(debt, income) %>% 
+  mutate(income = income * 1000) %>% 
+  cor()
+
+
+```
+
+In isolation, the reltionship between debt and income may be positive, when taking into account credit_limit as well, this relationship becomes negative. This is Simpson's Paradox.
