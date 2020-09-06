@@ -1,0 +1,24 @@
+---
+title: "Tidy Data"
+author: "Jin Chen"
+date: "9/4/2020"
+output: html_document
+---
+
+```{r Load Libraries}
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+library(nycflights13)
+library(fivethirtyeight)
+library(readxl) #this is not part of the text, but is an alternative to manually importing
+```
+
+```{r}
+dem_score <- read_csv("https://moderndive.com/data/dem_score.csv")
+dem_score
+
+dem_score2 <- read_excel("data/dem_score.xlsx")
+```
+
