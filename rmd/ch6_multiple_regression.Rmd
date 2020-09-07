@@ -217,4 +217,4 @@ credit_ch6 %>% select(debt, income) %>%
 
 ```
 
-In isolation, the reltionship between debt and income may be positive, when taking into account credit_limit as well, this relationship becomes negative. This is Simpson's Paradox.
+In isolation, the relationship between debt and income may be positive, when taking into account credit_limit as well, this relationship becomes negative. This is Simpson's Paradox.
