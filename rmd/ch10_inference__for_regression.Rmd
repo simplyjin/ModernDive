@@ -1,0 +1,71 @@
+---
+title: "inference for regression"
+author: "Jin Chen"
+date: "9/19/2020"
+output: html_document
+---
+
+```{r echo=FALSE}
+library(tidyverse)
+library(moderndive)
+library(infer)
+```
+
+```{r 10.4 Simulation based inference}
+evals_ch5 <- evals %>%
+  select(ID, score, bty_avg, age)
+glimpse(evals_ch5)
+
+bootstrap_distn_slope <- evals_ch5 %>% 
+  specify(formula = score ~ bty_avg) %>%
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "slope")
+bootstrap_distn_slope
+
+visualize(bootstrap_distn_slope)
+
+#Confidence interval using 95% percentile
+percentile_ci <- bootstrap_distn_slope %>% 
+  get_confidence_interval(type = "percentile", level = 0.95)
+percentile_ci
+
+
+#confidence interval using standard error
+observed_slope <- evals %>% 
+  specify(score ~ bty_avg) %>% 
+  calculate(stat = "slope")
+observed_slope
+
+se_ci <- bootstrap_distn_slope %>% 
+  get_ci(level = 0.95, type = "se", point_estimate = observed_slope)
+se_ci
+
+
+#compare. 0.035 and 0.099 are from a regression table using lm() then get_regression_table
+visualize(bootstrap_distn_slope) + 
+  shade_confidence_interval(endpoints = percentile_ci, fill = NULL, 
+                            linetype = "solid", color = "grey90") + 
+  shade_confidence_interval(endpoints = se_ci, fill = NULL, 
+                            linetype = "dashed", color = "grey60") +
+  shade_confidence_interval(endpoints = c(0.035, 0.099), fill = NULL, 
+                            linetype = "dotted", color = "black")
+#conclusion, they are all quite similar
+```
+
+```{r Hypothesis test for slope}
+#get null distribution. In this "hypothesized universe" shuffling/permuting bty_avg without consequence
+null_distn_slope <- evals %>% 
+  specify(score ~ bty_avg) %>%
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "slope")
+
+#notice how the distr is centered at b1 = 0. THis is because in the null hypothesis there is no relationship between score and bty_avg
+visualize(null_distn_slope) +
+  shade_p_value(obs_stat = observed_slope, direction = "both")
+  
+null_distn_slope %>% 
+  get_p_value(obs_stat = observed_slope, direction = "both")
+
+```
+
