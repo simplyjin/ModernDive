@@ -1,5 +1,5 @@
 ---
-title: "Capstone Data Proposal"
+title: "Explorations into World Life Expectancy Data"
 author: "Jin Chen"
 date: "9/20/2020"
 output: 
@@ -10,7 +10,6 @@ output:
       collapsed: no
     theme: lumen
 ---
-
 
 # Big Picture
 ## Research Question
@@ -42,12 +41,12 @@ glimpse(data_raw)
 skim(data_raw)
 ```
 
-There are 10 NA's for life expectancy, 194 for alcohol, and 0 for expenditure. The NA's will require further investigation when I make a final data frame for analysis.
+There are 10 NA's for life expectancy, 194 for alcohol, and 0 for expenditure. The NA's will require further investigation when I make a final data  frame for analysis.
 
 
 # Variables
 
-The **identification** variable is defined by the combination of the country and year variables.
+The **identification** variable is defined by the combination of the `country` and `year` variables.
 
 The **outcome** variable is called `life_expectancy` for per country and year.
 
